@@ -1,11 +1,16 @@
-name: Build Fabric Mod
+name: Build & Release Fabric Mod
 
 on:
   push:
     branches: [ "main" ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -36,3 +41,10 @@ jobs:
           name: LoreLivekalopsia-Jar
           path: build/libs/*[!dev][!sources].jar
           if-no-files-found: warn
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/libs/*[!dev][!sources].jar
+          generate_release_notes: true
