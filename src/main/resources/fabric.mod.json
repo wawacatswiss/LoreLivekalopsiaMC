@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "lorelivekalopsia",
+  "version": "${version}",
+  "name": "Lore & Canon Lives",
+  "description": "A roleplay and lore management mod featuring toggleable Lore mode, 3 Canon Lives system, physical withdrawable hearts, dynamic Tab list, and admin controls.",
+  "authors": [
+    "Wawa"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/lorelivekalopsia/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.lorelivekalopsia.LoreLivekalopsia"
+    ],
+    "client": [
+      "com.lorelivekalopsia.client.LoreLivekalopsiaClient"
+    ]
+  },
+  "mixins": [
+    "lorelivekalopsia.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "minecraft": "~1.20.1",
+    "java": ">=17",
+    "fabric-api": "*"
+  }
+}

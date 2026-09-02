@@ -1,0 +1,25 @@
+# Gradle build outputs and cache
+.gradle/
+build/
+out/
+
+# IDE / Editor files
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.classpath
+.project
+.settings/
+
+# Runtime / Test Run directories
+run/
+run-client/
+run-server/
+logs/
+crash-reports/
+
+# OS generated files
+.DS_Store
+Thumbs.db

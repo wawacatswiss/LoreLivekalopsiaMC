@@ -1,0 +1,14 @@
+{
+  "maxLives": 3,
+  "defaultLives": 3,
+  "sendToLimboOnZeroLives": true,
+  "loseLifeOnAnyDeathInLore": true,
+  "allowSuicideWithdrawal": false,
+  "hasLimboSet": false,
+  "limboDimension": "minecraft:overworld",
+  "limboX": 0.0,
+  "limboY": 100.0,
+  "limboZ": 0.0,
+  "limboYaw": 0.0,
+  "limboPitch": 0.0
+}
