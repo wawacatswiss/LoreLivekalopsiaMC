@@ -1,14 +1,13 @@
-# Lore & Canon Lives
+A roleplay and canon life management mod for the [Kalopsia SMP](https://discord.gg/FNU2FxFaYv).
 
 ## Features
 
-- **Toggle lore mode**: press "H" to toggle the lives system on or off 
-- **3 Canon Lives System**: Every player starts with 3 Canon Lives.
-- **Deaths**: Dying with lore mode makes you lose one of you lives
-- **Limbo**: Dying with your last life puts you into limbo (a place where the mods set where you respawn)
-- **Tab List**: On the player list you can see players of how many hearts they're on if they have lore mode on
-- **Physical hearts**: You can withdraw lore hearts to trade with other people
----
+- **Toggle Lore Mode**: Press **H** to toggle Lore Mode on or off at any time.
+- **3 Canon Lives System**: Every player begins with 3 Canon Lives.
+- **Canon Deaths**: Dying while Lore Mode is active deducts one of your Canon Lives.
+- **Limbo Penalty**: Losing your final Canon Life teleports you to Limbo in Adventure Mode until revived by an administrator.
+- **Tab List Display**: Active Lore Mode players display their remaining heart counts directly in the player list.
+- **Withdrawable Hearts**: Convert your Canon Lives into physical Canon Heart items to trade, gift, or store.
 
 ## Commands
 
@@ -18,19 +17,18 @@
 - `/withdraw [amount]` - Withdraw Canon Lives into physical heart items.
 
 ### Admin Commands (Op 2)
-- `/loreadmin lives <targets> set <amount>` - Sets lives of selected player.
-- `/loreadmin lives <targets> add <amount>` - Gives lives of the selected player.
-- `/loreadmin lives <targets> take <amount>` - Takes lives of the selected player.
-- `/loreadmin revive <targets>` - Revives the player from limbo into world spawn and gives them 1 life
-- `/loreadmin limbo set` - Sets the destination of limbo.
-- `/loreadmin limbo send <targets>` - Teleports players into limbo
-- `/loreadmin mode <targets> [true|false]` - Forces the selected player into lore mode.
-- `/loreadmin reset <targets>` - Resets the player (3 lives and survival mode).
-- `/loreadmin reload` - Reload configuration file.
-
----
+- `/loreadmin lives <targets> set <amount>` - Set the Canon Lives of selected player(s).
+- `/loreadmin lives <targets> add <amount>` - Add Canon Lives to selected player(s).
+- `/loreadmin lives <targets> take <amount>` - Remove Canon Lives from selected player(s).
+- `/loreadmin revive <targets>` - Revive a player from Limbo to world spawn with 1 life in Survival Mode.
+- `/loreadmin limbo set` - Set the destination coordinates for Limbo.
+- `/loreadmin limbo send <targets>` - Teleport selected player(s) directly into Limbo.
+- `/loreadmin mode <targets> [true|false]` - Force selected player(s) into or out of Lore Mode.
+- `/loreadmin reset <targets>` - Reset player data back to default (3 lives and Survival Mode).
+- `/loreadmin reload` - Reload configuration from disk.
 
 ## Requirements
+
 - **Minecraft**: 1.20.1
 - **Fabric Loader**: 0.15.0+
 - **Fabric API**
