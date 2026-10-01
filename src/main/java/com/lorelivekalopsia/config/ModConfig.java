@@ -16,8 +16,9 @@ public class ModConfig {
     public int maxLives = 3;
     public int defaultLives = 3;
     public boolean sendToLimboOnZeroLives = true;
-    public boolean loseLifeOnAnyDeathInLore = true;
-    public boolean allowSuicideWithdrawal = false;
+
+    public boolean logDeaths = true;
+    public String deathWebhookUrl = "";
 
     public boolean hasLimboSet = false;
     public String limboDimension = "minecraft:overworld";

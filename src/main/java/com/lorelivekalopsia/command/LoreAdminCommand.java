@@ -6,7 +6,9 @@ import com.lorelivekalopsia.data.PlayerLoreManager;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.authlib.GameProfile;
 import net.minecraft.command.argument.EntityArgumentType;
+import net.minecraft.command.argument.GameProfileArgumentType;
 import net.minecraft.command.argument.Vec3ArgumentType;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
@@ -37,8 +39,8 @@ public class LoreAdminCommand {
                                         .then(CommandManager.argument("amount", IntegerArgumentType.integer(1, 100))
                                                 .executes(ctx -> executeTakeLife(ctx.getSource(), EntityArgumentType.getPlayers(ctx, "targets"), IntegerArgumentType.getInteger(ctx, "amount")))))))
                 .then(CommandManager.literal("revive")
-                        .then(CommandManager.argument("targets", EntityArgumentType.players())
-                                .executes(ctx -> executeRevive(ctx.getSource(), EntityArgumentType.getPlayers(ctx, "targets")))))
+                        .then(CommandManager.argument("targets", GameProfileArgumentType.gameProfile())
+                                .executes(ctx -> executeRevive(ctx.getSource(), GameProfileArgumentType.getProfileArgument(ctx, "targets")))))
                 .then(CommandManager.literal("limbo")
                         .then(CommandManager.literal("set")
                                 .executes(ctx -> executeSetLimboHere(ctx.getSource()))
@@ -74,8 +76,12 @@ public class LoreAdminCommand {
     }
 
     private static int executeAddLife(ServerCommandSource source, Collection<ServerPlayerEntity> targets, int amount) {
+        int changed = 0;
         for (ServerPlayerEntity player : targets) {
-            PlayerLoreManager.addCanonLives(player, amount);
+            if (!PlayerLoreManager.addCanonLives(player, amount)) {
+                continue;
+            }
+            changed++;
             player.sendMessage(
                     Text.literal("An admin granted you ").formatted(Formatting.GREEN)
                             .append(Text.literal("+" + amount + " Canon Life(s)").formatted(Formatting.RED))
@@ -84,8 +90,8 @@ public class LoreAdminCommand {
             );
             player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 1.0f, 1.0f);
         }
-        source.sendMessage(Text.literal("Added " + amount + " life(s) to " + targets.size() + " player(s).").formatted(Formatting.GREEN));
-        return targets.size();
+        source.sendMessage(Text.literal("Added " + amount + " life(s) to " + changed + " player(s).").formatted(Formatting.GREEN));
+        return changed;
     }
 
     private static int executeTakeLife(ServerCommandSource source, Collection<ServerPlayerEntity> targets, int amount) {
@@ -104,30 +110,20 @@ public class LoreAdminCommand {
         return targets.size();
     }
 
-    private static int executeRevive(ServerCommandSource source, Collection<ServerPlayerEntity> targets) {
-        for (ServerPlayerEntity player : targets) {
-            PlayerLoreData data = PlayerLoreManager.getPlayerData(player);
-            if (data.getCanonLives() <= 0) {
-                PlayerLoreManager.setCanonLives(player, 1);
+    private static int executeRevive(ServerCommandSource source, Collection<GameProfile> targets) {
+        int revived = 0;
+        int queued = 0;
+        for (GameProfile profile : targets) {
+            PlayerLoreManager.ReviveResult result = PlayerLoreManager.revive(source.getServer(), profile, false, source.getName());
+            switch (result) {
+                case REVIVED -> revived++;
+                case QUEUED -> queued++;
+                case NOT_IN_LIMBO -> source.sendError(Text.literal(profile.getName() + " is offline and not in Limbo."));
             }
-            if (player.interactionManager.getGameMode() == GameMode.SPECTATOR || player.interactionManager.getGameMode() == GameMode.ADVENTURE) {
-                player.changeGameMode(GameMode.SURVIVAL);
-            }
-
-            BlockPos spawnPos = player.getServer().getOverworld().getSpawnPos();
-            player.teleport(player.getServer().getOverworld(), spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, 0, 0);
-
-            PlayerLoreManager.setLoreMode(player, false, true);
-            player.sendMessage(
-                    Text.literal("You have been revived from Limbo with ").formatted(Formatting.GREEN)
-                            .append(Text.literal(data.getCanonLives() + " Canon Life").formatted(Formatting.YELLOW))
-                            .append(Text.literal(".").formatted(Formatting.GREEN)),
-                    false
-            );
-            player.playSound(SoundEvents.ITEM_TOTEM_USE, SoundCategory.PLAYERS, 1.0f, 1.0f);
         }
-        source.sendMessage(Text.literal("Revived " + targets.size() + " player(s) and returned them to Survival.").formatted(Formatting.GREEN));
-        return targets.size();
+        source.sendMessage(Text.literal("Revived " + revived + " player(s)"
+                + (queued > 0 ? ", queued " + queued + " offline player(s) for their next login" : "") + ".").formatted(Formatting.GREEN));
+        return revived + queued;
     }
 
     private static int executeSetLimboHere(ServerCommandSource source) {

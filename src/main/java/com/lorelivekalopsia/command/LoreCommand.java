@@ -16,6 +16,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
+
 public class LoreCommand {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(CommandManager.literal("lore")
@@ -100,7 +101,7 @@ public class LoreCommand {
             return 0;
         }
 
-        if (!config.allowSuicideWithdrawal && (data.getCanonLives() - amount) < 1) {
+        if ((data.getCanonLives() - amount) < 1) {
             player.sendMessage(Text.literal("You cannot withdraw your last remaining Canon Life.").formatted(Formatting.RED), false);
             player.playSound(SoundEvents.BLOCK_BEACON_DEACTIVATE, SoundCategory.PLAYERS, 1.0f, 1.0f);
             return 0;

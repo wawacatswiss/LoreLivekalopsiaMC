@@ -30,6 +30,8 @@ public class LoreLivekalopsia implements ModInitializer {
 
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             var player = handler.getPlayer();
+            PlayerLoreManager.applyPendingRevive(player);
+            PlayerLoreManager.handlePlayerRespawn(player);
             PlayerLoreManager.updatePlayerListName(player);
             ModNetworking.syncToClient(player);
         });

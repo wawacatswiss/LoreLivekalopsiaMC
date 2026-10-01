@@ -3,17 +3,23 @@ package com.lorelivekalopsia.data;
 import com.lorelivekalopsia.LoreLivekalopsia;
 import com.lorelivekalopsia.config.ModConfig;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtString;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.PersistentState;
 import net.minecraft.world.PersistentStateManager;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public class LoreState extends PersistentState {
     private static final String STATE_KEY = LoreLivekalopsia.MOD_ID;
     private final Map<UUID, PlayerLoreData> players = new HashMap<>();
+    private final Set<UUID> pendingRevives = new HashSet<>();
 
     public LoreState() {
     }
@@ -31,6 +37,13 @@ public class LoreState extends PersistentState {
             } catch (IllegalArgumentException ignored) {
             }
         }
+        NbtList pending = tag.getList("PendingRevives", NbtElement.STRING_TYPE);
+        for (int i = 0; i < pending.size(); i++) {
+            try {
+                state.pendingRevives.add(UUID.fromString(pending.getString(i)));
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
         return state;
     }
 
@@ -44,12 +57,31 @@ public class LoreState extends PersistentState {
             playersTag.put(entry.getKey().toString(), playerTag);
         }
         tag.put("Players", playersTag);
+        NbtList pending = new NbtList();
+        for (UUID uuid : pendingRevives) {
+            pending.add(NbtString.of(uuid.toString()));
+        }
+        tag.put("PendingRevives", pending);
         return tag;
     }
 
     public static LoreState getServerState(MinecraftServer server) {
         PersistentStateManager manager = server.getOverworld().getPersistentStateManager();
         return manager.getOrCreate(LoreState::fromNbt, LoreState::new, STATE_KEY);
+    }
+
+    public void addPendingRevive(UUID uuid) {
+        if (pendingRevives.add(uuid)) {
+            markDirty();
+        }
+    }
+
+    public boolean consumePendingRevive(UUID uuid) {
+        if (pendingRevives.remove(uuid)) {
+            markDirty();
+            return true;
+        }
+        return false;
     }
 
     public PlayerLoreData getPlayerData(UUID uuid) {

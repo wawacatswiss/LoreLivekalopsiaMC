@@ -41,6 +41,9 @@ public abstract class ServerPlayerEntityMixin {
     @Inject(method = "getPlayerListName", at = @At("HEAD"), cancellable = true)
     private void onGetPlayerListName(CallbackInfoReturnable<Text> cir) {
         ServerPlayerEntity player = (ServerPlayerEntity) (Object) this;
+        if (player.getServer() == null) {
+            return;
+        }
         cir.setReturnValue(PlayerLoreManager.getFormattedTabName(player));
     }
 }

@@ -2,7 +2,9 @@ package com.lorelivekalopsia.data;
 
 import com.lorelivekalopsia.config.ModConfig;
 import com.lorelivekalopsia.network.ModNetworking;
+import com.lorelivekalopsia.util.DeathLogger;
 import com.lorelivekalopsia.util.LoreDisplay;
+import com.mojang.authlib.GameProfile;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
 import net.minecraft.network.packet.s2c.play.TitleS2CPacket;
@@ -11,6 +13,7 @@ import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
@@ -119,6 +122,7 @@ public final class PlayerLoreManager {
         LoreState.getServerState(player.getServer()).markDirty();
         updatePlayerListName(player);
         ModNetworking.syncToClient(player);
+        DeathLogger.logCanonDeath(player, damageSource, remaining, config.maxLives);
 
         if (server != null) {
             if (remaining > 0) {
@@ -134,6 +138,63 @@ public final class PlayerLoreManager {
                 );
             }
         }
+    }
+
+    public enum ReviveResult { REVIVED, QUEUED, NOT_IN_LIMBO }
+
+    /**
+     * Revives a player from Limbo. Online players are revived immediately; offline players
+     * in Limbo are queued and revived when they next join.
+     */
+    public static ReviveResult revive(MinecraftServer server, GameProfile profile, boolean requireLimbo, String revivedBy) {
+        ServerPlayerEntity online = server.getPlayerManager().getPlayer(profile.getId());
+        PlayerLoreData data = getPlayerData(server, profile.getId());
+        boolean inLimbo = data.getCanonLives() <= 0;
+
+        if (online != null) {
+            if (requireLimbo && !inLimbo) {
+                return ReviveResult.NOT_IN_LIMBO;
+            }
+            applyRevive(online);
+            DeathLogger.logRevive(online.getName().getString(), revivedBy);
+            return ReviveResult.REVIVED;
+        }
+
+        if (!inLimbo) {
+            return ReviveResult.NOT_IN_LIMBO;
+        }
+        LoreState.getServerState(server).addPendingRevive(profile.getId());
+        DeathLogger.logRevive(profile.getName() != null ? profile.getName() : profile.getId().toString(), revivedBy + " (queued until next login)");
+        return ReviveResult.QUEUED;
+    }
+
+    public static void applyPendingRevive(ServerPlayerEntity player) {
+        if (LoreState.getServerState(player.getServer()).consumePendingRevive(player.getUuid())) {
+            applyRevive(player);
+        }
+    }
+
+    private static void applyRevive(ServerPlayerEntity player) {
+        PlayerLoreData data = getPlayerData(player);
+        if (data.getCanonLives() <= 0) {
+            setCanonLives(player, 1);
+        }
+        if (player.interactionManager.getGameMode() == GameMode.SPECTATOR || player.interactionManager.getGameMode() == GameMode.ADVENTURE) {
+            player.changeGameMode(GameMode.SURVIVAL);
+        }
+
+        ServerWorld overworld = player.getServer().getOverworld();
+        BlockPos spawnPos = overworld.getSpawnPos();
+        player.teleport(overworld, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, 0, 0);
+
+        setLoreMode(player, false, true);
+        player.sendMessage(
+                Text.literal("You have been revived from Limbo with ").formatted(Formatting.GREEN)
+                        .append(Text.literal(data.getCanonLives() + " Canon Life").formatted(Formatting.YELLOW))
+                        .append(Text.literal(".").formatted(Formatting.GREEN)),
+                false
+        );
+        player.playSound(SoundEvents.ITEM_TOTEM_USE, SoundCategory.PLAYERS, 1.0f, 1.0f);
     }
 
     public static void handlePlayerRespawn(ServerPlayerEntity player) {
